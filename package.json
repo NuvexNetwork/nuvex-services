@@ -1,0 +1,31 @@
+{
+  "name": "nuvex-services",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.15.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint": "eslint . --config config/eslint.config.js",
+    "format": "prettier --write . --config config/prettierrc.json --ignore-path config/prettierignore",
+    "format:check": "prettier --check . --config config/prettierrc.json --ignore-path config/prettierignore",
+    "test": "pnpm -r --if-present test",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "build": "pnpm -r --if-present build"
+  },
+  "pnpm": {
+    "overrides": {
+      "@xmldom/xmldom": ">=0.9.12",
+      "deepmerge-ts": ">=8.0.0",
+      "mysql2": ">=3.22.0"
+    }
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "10.11.0",
+    "prettier": "^3.6.2",
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8.46.0"
+  }
+}

@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: nuvex-oracle-node
+    static_configs:
+      - targets: ["node:8081"]

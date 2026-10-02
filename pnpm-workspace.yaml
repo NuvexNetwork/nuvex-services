@@ -1,0 +1,9 @@
+packages:
+  - "api"
+  - "indexer"
+  - "data"
+
+onlyBuiltDependencies:
+  - "@prisma/engines"
+  - "prisma"
+  - "esbuild"

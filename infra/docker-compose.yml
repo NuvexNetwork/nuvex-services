@@ -1,0 +1,58 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: nuvex
+      POSTGRES_PASSWORD: nuvex
+      POSTGRES_DB: nuvex
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nuvex -d nuvex"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    profiles: ["observe"]
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  node:
+    profiles: ["node"]
+    image: nuvex-oracle-node:local
+    environment:
+      NUVEX_NODE_HEALTH_BIND: "0.0.0.0:8081"
+      NUVEX_LOG_FORMAT: json
+    ports:
+      - "8081:8081"
+
+  api:
+    profiles: ["api"]
+    build:
+      context: ..
+      dockerfile: api/Dockerfile
+    environment:
+      NUVEX_API_HOST: "0.0.0.0"
+      NUVEX_API_PORT: "8080"
+    ports:
+      - "8080:8080"
+
+  indexer:
+    profiles: ["indexer"]
+    build:
+      context: ..
+      dockerfile: indexer/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://nuvex:nuvex@postgres:5432/nuvex
+    depends_on:
+      postgres:
+        condition: service_healthy

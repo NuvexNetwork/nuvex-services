@@ -1,0 +1,58 @@
+openapi: 3.1.0
+info:
+  title: Nuvex API
+  version: 0.1.0
+  description: >
+    Read model for operators and dashboards. Responses are not protocol truth.
+    Finalized results come from Solana accounts. Collection routes return 501
+    until the indexer exists.
+paths:
+  /health:
+    get:
+      summary: Process health
+      responses:
+        "200":
+          description: Process is up and is not a chain authority.
+  /live:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: Process is up.
+  /ready:
+    get:
+      summary: Readiness of the HTTP process
+      responses:
+        "200":
+          description: The process can answer health checks. Chain reads are disabled.
+  /v1/requests:
+    get:
+      summary: Indexed requests
+      responses:
+        "501":
+          description: Not implemented.
+  /v1/nodes:
+    get:
+      responses:
+        "501":
+          description: Not implemented.
+  /v1/jobs:
+    get:
+      responses:
+        "501":
+          description: Not implemented.
+  /v1/models:
+    get:
+      responses:
+        "501":
+          description: Not implemented.
+  /v1/prices:
+    get:
+      responses:
+        "501":
+          description: Not implemented.
+  /v1/network:
+    get:
+      responses:
+        "501":
+          description: Not implemented.

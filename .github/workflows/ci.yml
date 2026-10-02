@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  typescript:
+    name: TypeScript
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm typecheck
+      - run: pnpm build
+      - name: Validate Prisma schema
+        working-directory: indexer
+        env:
+          DATABASE_URL: postgresql://nuvex:nuvex@127.0.0.1:5432/nuvex
+        run: pnpm exec prisma validate
+
+  docker:
+    name: Docker
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose -f infra/docker-compose.yml config
+      - run: docker build -f api/Dockerfile -t nuvex-api .
+      - run: docker build -f indexer/Dockerfile -t nuvex-indexer .
+      - run: docker build -f ai/Dockerfile -t nuvex-ai-worker .

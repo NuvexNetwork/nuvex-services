@@ -1,0 +1,185 @@
+// Read model for indexed protocol accounts.
+// The indexer does not write these tables in Milestone 0.
+// Chain accounts remain the source of truth.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Node {
+  id              String      @id
+  authority       String
+  operator        String
+  stakeLamports   BigInt      @default(0)
+  jobMask         Int         @default(0)
+  status          String
+  reputation      Int         @default(0)
+  createdSlot     BigInt
+  lastHeartbeat   BigInt?
+  updatedSlot     BigInt
+  events          NodeEvent[]
+
+  @@index([authority])
+  @@index([status])
+  @@map("nodes")
+}
+
+model NodeEvent {
+  id        String @id
+  nodeId    String
+  node      Node   @relation(fields: [nodeId], references: [id])
+  slot      BigInt
+  signature String
+  kind      String
+
+  @@index([nodeId, slot])
+  @@index([signature])
+  @@map("node_events")
+}
+
+model Request {
+  id          String         @id
+  jobType     String
+  status      String
+  requester   String
+  callback    String?
+  createdSlot BigInt
+  updatedSlot BigInt
+  events      RequestEvent[]
+  result      Result?
+  verification Verification?
+
+  @@index([status, updatedSlot])
+  @@index([jobType])
+  @@index([requester])
+  @@map("requests")
+}
+
+model RequestEvent {
+  id        String  @id
+  requestId String
+  request   Request @relation(fields: [requestId], references: [id])
+  slot      BigInt
+  signature String
+  kind      String
+
+  @@index([requestId, slot])
+  @@index([signature])
+  @@map("request_events")
+}
+
+model Job {
+  id          String @id
+  jobType     String @unique
+  feeLamports BigInt
+  timeoutSlots BigInt
+  quorum      Int
+  updatedSlot BigInt
+
+  @@map("jobs")
+}
+
+model Result {
+  id        String  @id
+  requestId String  @unique
+  request   Request @relation(fields: [requestId], references: [id])
+  slot      BigInt
+  commitment String
+
+  @@index([slot])
+  @@map("results")
+}
+
+model Verification {
+  id        String  @id
+  requestId String  @unique
+  request   Request @relation(fields: [requestId], references: [id])
+  status    String
+  slot      BigInt
+
+  @@index([status])
+  @@map("verifications")
+}
+
+model Challenge {
+  id         String @id
+  requestId  String
+  challenger String
+  status     String
+  slot       BigInt
+
+  @@unique([requestId, challenger])
+  @@index([status])
+  @@map("challenges")
+}
+
+model Reward {
+  id        String @id
+  requestId String
+  recipient String
+  lamports  BigInt
+  slot      BigInt
+  signature String
+
+  @@index([recipient, slot])
+  @@index([signature])
+  @@map("rewards")
+}
+
+model ChainTransaction {
+  signature   String @id
+  slot        BigInt
+  success     Boolean
+  programId   String
+
+  @@index([slot])
+  @@index([programId])
+  @@map("transactions")
+}
+
+model Model {
+  id        String         @id
+  name      String         @unique
+  versions  ModelVersion[]
+
+  @@map("models")
+}
+
+model ModelVersion {
+  id        String @id
+  modelId   String
+  model     Model  @relation(fields: [modelId], references: [id])
+  digest    String
+  createdSlot BigInt
+
+  @@unique([modelId, digest])
+  @@map("model_versions")
+}
+
+model PriceObservation {
+  id        String @id
+  symbol    String
+  source    String
+  price     Decimal @db.Decimal(38, 18)
+  slot      BigInt
+  observedAt DateTime
+
+  @@index([symbol, slot])
+  @@map("price_observations")
+}
+
+model NetworkMetric {
+  id        String   @id
+  name      String
+  slot      BigInt
+  value     Decimal  @db.Decimal(38, 18)
+  observedAt DateTime
+
+  @@index([name, slot])
+  @@map("network_metrics")
+}
