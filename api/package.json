@@ -12,10 +12,12 @@
   },
   "dependencies": {
     "fastify": "5.12.5",
+    "pg": "^8.16.3",
     "zod": "4.6.5"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",
+    "@types/pg": "^8.15.5",
     "tsx": "^4.20.5",
     "typescript": "5.9.3",
     "vitest": "5.0.3"

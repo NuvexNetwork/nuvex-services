@@ -3,9 +3,10 @@ export interface ProcessResult {
   reason: string;
 }
 
+/** Transaction logs are not replayed. The indexer applies account snapshots. */
 export function processTransaction(): ProcessResult {
   return {
     applied: false,
-    reason: "Transaction processing starts in Milestone 4.",
+    reason: "The indexer applies getProgramAccounts snapshots. It does not replay transactions.",
   };
 }

@@ -1,3 +1,3 @@
 export function health() {
-  return { status: "ok" as const, indexing: "disabled" as const };
+  return { status: "ok" as const, indexing: "process" as const };
 }

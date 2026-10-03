@@ -6,6 +6,6 @@ export interface WebsocketStatus {
 export function websocketStatus(): WebsocketStatus {
   return {
     enabled: false,
-    reason: "Websocket updates start with the indexer in Milestone 4.",
+    reason: "Websocket updates are not implemented. Clients poll the read API.",
   };
 }

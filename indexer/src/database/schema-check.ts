@@ -17,6 +17,9 @@ export const REQUIRED_TABLES = [
   "model_versions",
   "price_observations",
   "network_metrics",
+  "checkpoints",
+  "registry",
+  "protocol",
 ] as const;
 
 export function readSchema(): string {

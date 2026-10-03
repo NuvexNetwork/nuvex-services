@@ -1,5 +1,5 @@
 // Read model for indexed protocol accounts.
-// The indexer does not write these tables in Milestone 0.
+// The indexer writes these tables from getProgramAccounts snapshots.
 // Chain accounts remain the source of truth.
 
 generator client {
@@ -15,13 +15,15 @@ model Node {
   id              String      @id
   authority       String
   operator        String
-  stakeLamports   BigInt      @default(0)
-  jobMask         Int         @default(0)
+  vrfPubkey       String?     @map("vrf_pubkey")
+  stakeLamports   BigInt      @default(0) @map("stake_lamports")
+  jobMask         Int         @default(0) @map("job_mask")
   status          String
-  reputation      Int         @default(0)
-  createdSlot     BigInt
-  lastHeartbeat   BigInt?
-  updatedSlot     BigInt
+  reputation      BigInt      @default(0)
+  createdSlot     BigInt      @map("created_slot")
+  lastHeartbeat   BigInt?     @map("last_heartbeat")
+  cooldownEndSlot BigInt?     @map("cooldown_end_slot")
+  updatedSlot     BigInt      @map("updated_slot")
   events          NodeEvent[]
 
   @@index([authority])
@@ -31,7 +33,7 @@ model Node {
 
 model NodeEvent {
   id        String @id
-  nodeId    String
+  nodeId    String @map("node_id")
   node      Node   @relation(fields: [nodeId], references: [id])
   slot      BigInt
   signature String
@@ -43,16 +45,21 @@ model NodeEvent {
 }
 
 model Request {
-  id          String         @id
-  jobType     String
-  status      String
-  requester   String
-  callback    String?
-  createdSlot BigInt
-  updatedSlot BigInt
-  events      RequestEvent[]
-  result      Result?
-  verification Verification?
+  id                String         @id
+  jobType           String         @map("job_type")
+  status            String
+  requester         String
+  callback          String?
+  maxFee            BigInt         @default(0) @map("max_fee")
+  createdSlot       BigInt         @map("created_slot")
+  expiresSlot       BigInt         @default(0) @map("expires_slot")
+  assignedNode      String?        @map("assigned_node")
+  assignedStake     BigInt?        @map("assigned_stake")
+  assignedHeartbeat BigInt?        @map("assigned_heartbeat")
+  updatedSlot       BigInt         @map("updated_slot")
+  events            RequestEvent[]
+  result            Result?
+  verification      Verification?
 
   @@index([status, updatedSlot])
   @@index([jobType])
@@ -62,7 +69,7 @@ model Request {
 
 model RequestEvent {
   id        String  @id
-  requestId String
+  requestId String  @map("request_id")
   request   Request @relation(fields: [requestId], references: [id])
   slot      BigInt
   signature String
@@ -74,22 +81,24 @@ model RequestEvent {
 }
 
 model Job {
-  id          String @id
-  jobType     String @unique
-  feeLamports BigInt
-  timeoutSlots BigInt
-  quorum      Int
-  updatedSlot BigInt
+  id           String @id
+  jobType      String @unique @map("job_type")
+  feeLamports  BigInt @map("fee_lamports")
+  timeoutSlots BigInt @map("timeout_slots")
+  quorum       Int
+  updatedSlot  BigInt @map("updated_slot")
 
   @@map("jobs")
 }
 
 model Result {
-  id        String  @id
-  requestId String  @unique
-  request   Request @relation(fields: [requestId], references: [id])
-  slot      BigInt
+  id         String  @id
+  requestId  String  @unique @map("request_id")
+  request    Request @relation(fields: [requestId], references: [id])
+  slot       BigInt
   commitment String
+  nodeId     String? @map("node_id")
+  outputHex  String? @map("output_hex")
 
   @@index([slot])
   @@map("results")
@@ -97,10 +106,12 @@ model Result {
 
 model Verification {
   id        String  @id
-  requestId String  @unique
+  requestId String  @unique @map("request_id")
   request   Request @relation(fields: [requestId], references: [id])
   status    String
   slot      BigInt
+  nodeId    String? @map("node_id")
+  outputHex String? @map("output_hex")
 
   @@index([status])
   @@map("verifications")
@@ -108,7 +119,7 @@ model Verification {
 
 model Challenge {
   id         String @id
-  requestId  String
+  requestId  String @map("request_id")
   challenger String
   status     String
   slot       BigInt
@@ -120,7 +131,7 @@ model Challenge {
 
 model Reward {
   id        String @id
-  requestId String
+  requestId String @map("request_id")
   recipient String
   lamports  BigInt
   slot      BigInt
@@ -132,10 +143,10 @@ model Reward {
 }
 
 model ChainTransaction {
-  signature   String @id
-  slot        BigInt
-  success     Boolean
-  programId   String
+  signature String  @id
+  slot      BigInt
+  success   Boolean
+  programId String  @map("program_id")
 
   @@index([slot])
   @@index([programId])
@@ -143,43 +154,75 @@ model ChainTransaction {
 }
 
 model Model {
-  id        String         @id
-  name      String         @unique
-  versions  ModelVersion[]
+  id       String         @id
+  name     String         @unique
+  versions ModelVersion[]
 
   @@map("models")
 }
 
 model ModelVersion {
-  id        String @id
-  modelId   String
-  model     Model  @relation(fields: [modelId], references: [id])
-  digest    String
-  createdSlot BigInt
+  id          String @id
+  modelId     String @map("model_id")
+  model       Model  @relation(fields: [modelId], references: [id])
+  digest      String
+  createdSlot BigInt @map("created_slot")
 
   @@unique([modelId, digest])
   @@map("model_versions")
 }
 
 model PriceObservation {
-  id        String @id
-  symbol    String
-  source    String
-  price     Decimal @db.Decimal(38, 18)
-  slot      BigInt
-  observedAt DateTime
+  id         String   @id
+  symbol     String
+  source     String
+  price      Decimal  @db.Decimal(38, 18)
+  slot       BigInt
+  observedAt DateTime @map("observed_at")
 
   @@index([symbol, slot])
   @@map("price_observations")
 }
 
 model NetworkMetric {
-  id        String   @id
-  name      String
-  slot      BigInt
-  value     Decimal  @db.Decimal(38, 18)
-  observedAt DateTime
+  id         String   @id
+  name       String
+  slot       BigInt
+  value      Decimal  @db.Decimal(38, 18)
+  observedAt DateTime @map("observed_at")
 
   @@index([name, slot])
   @@map("network_metrics")
+}
+
+model Checkpoint {
+  id                      String    @id
+  lastProcessedSlot       BigInt?   @map("last_processed_slot")
+  lastProcessedSignature  String?   @map("last_processed_signature")
+  updatedAt               DateTime  @map("updated_at")
+
+  @@map("checkpoints")
+}
+
+model Registry {
+  id                     String  @id
+  authority              String
+  nodeCount              BigInt  @map("node_count")
+  minStake               BigInt  @map("min_stake")
+  unstakeCooldownSlots   BigInt  @map("unstake_cooldown_slots")
+  heartbeatTimeoutSlots  BigInt  @map("heartbeat_timeout_slots")
+  slashAuthority         String? @map("slash_authority")
+  slashDestination       String? @map("slash_destination")
+  updatedSlot            BigInt  @map("updated_slot")
+
+  @@map("registry")
+}
+
+model Protocol {
+  id          String  @id
+  authority   String
+  paused      Boolean
+  updatedSlot BigInt  @map("updated_slot")
+
+  @@map("protocol")
 }

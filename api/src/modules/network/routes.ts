@@ -1,9 +1,13 @@
 import type { FastifyInstance } from "fastify";
 
-import { notImplemented } from "../../common/errors.js";
+import { readModelUnavailable } from "../../common/errors.js";
+import type { ReadModel } from "../../read-model/types.js";
 
-export function registerNetworkRoutes(app: FastifyInstance): void {
+export function registerNetworkRoutes(app: FastifyInstance, store: ReadModel): void {
   app.get("/v1/network", async (_request, reply) => {
-    return reply.code(501).send(notImplemented);
+    if (!store.available) {
+      return reply.code(503).send(readModelUnavailable);
+    }
+    return store.network();
   });
 }

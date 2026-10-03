@@ -43,16 +43,25 @@ services:
     environment:
       NUVEX_API_HOST: "0.0.0.0"
       NUVEX_API_PORT: "8080"
+      DATABASE_URL: postgresql://nuvex:nuvex@postgres:5432/nuvex
     ports:
       - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   indexer:
     profiles: ["indexer"]
     build:
       context: ..
       dockerfile: indexer/Dockerfile
+    command: ["start"]
     environment:
       DATABASE_URL: postgresql://nuvex:nuvex@postgres:5432/nuvex
+      NUVEX_RPC_URL: ${NUVEX_RPC_URL:-}
+      NUVEX_ORACLE_CORE_PROGRAM_ID: ${NUVEX_ORACLE_CORE_PROGRAM_ID:-}
+      NUVEX_ORACLE_REGISTRY_PROGRAM_ID: ${NUVEX_ORACLE_REGISTRY_PROGRAM_ID:-}
+      NUVEX_VERIFICATION_PROGRAM_ID: ${NUVEX_VERIFICATION_PROGRAM_ID:-}
     depends_on:
       postgres:
         condition: service_healthy
