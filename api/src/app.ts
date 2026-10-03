@@ -8,11 +8,16 @@ import { registerNetworkRoutes } from "./modules/network/routes.js";
 import { registerNodeRoutes } from "./modules/nodes/routes.js";
 import { registerPriceRoutes } from "./modules/prices/routes.js";
 import { registerRequestRoutes } from "./modules/requests/routes.js";
+import { aggregatePrices } from "@nuvex/oracle-data";
+
 import { readModelFromEnv } from "./read-model/from-env.js";
 import type { ReadModel } from "./read-model/types.js";
 import { websocketStatus } from "./websocket/hub.js";
 
-export function buildApp(options?: { readModel?: ReadModel }): FastifyInstance {
+export function buildApp(options?: {
+  readModel?: ReadModel;
+  prices?: typeof aggregatePrices;
+}): FastifyInstance {
   const store = options?.readModel ?? readModelFromEnv();
   const app = Fastify({
     logger:
@@ -44,7 +49,7 @@ export function buildApp(options?: { readModel?: ReadModel }): FastifyInstance {
   registerNodeRoutes(app, store);
   registerJobRoutes(app);
   registerModelRoutes(app);
-  registerPriceRoutes(app);
+  registerPriceRoutes(app, options?.prices);
   registerNetworkRoutes(app, store);
 
   return app;

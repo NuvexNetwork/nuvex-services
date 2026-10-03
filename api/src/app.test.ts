@@ -80,4 +80,48 @@ describe("api", () => {
     expect(missing.statusCode).toBe(501);
     await app.close();
   });
+
+  it("returns a provider median and refuses to fill a short one", async () => {
+    const app = buildApp({
+      readModel: unavailableReadModel,
+      prices: async () => ({
+        authority: "none",
+        source: "providers",
+        symbol: "SOL/USD",
+        quote: "USD",
+        median: "105",
+        sufficient: true,
+        minimumSources: 2,
+        maxAgeMs: 60_000,
+        fresh: [],
+        rejected: [],
+        note: "Not a protocol result.",
+      }),
+    });
+    const response = await app.inject({ method: "GET", url: "/v1/prices?symbol=SOL/USD" });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({ authority: "none", median: "105" });
+    await app.close();
+
+    const short = buildApp({
+      readModel: unavailableReadModel,
+      prices: async () => ({
+        authority: "none",
+        source: "providers",
+        symbol: "SOL/USD",
+        quote: "USD",
+        median: null,
+        sufficient: false,
+        minimumSources: 2,
+        maxAgeMs: 60_000,
+        fresh: [],
+        rejected: [{ provider: "pyth", reason: "HTTP 401" }],
+        note: "Not a protocol result.",
+      }),
+    });
+    const refused = await short.inject({ method: "GET", url: "/v1/prices?symbol=SOL/USD" });
+    expect(refused.statusCode).toBe(422);
+    expect(refused.json().median).toBeNull();
+    await short.close();
+  });
 });

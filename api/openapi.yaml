@@ -6,7 +6,8 @@ info:
     Read model for operators and dashboards. Responses are not protocol truth.
     Finalized results come from Solana accounts. GET /health returns authority: none.
     Requests, nodes, and network counts are served from the indexer store.
-    Jobs, models, and prices stay unimplemented.
+    GET /v1/prices returns a median of fresh public observations. That median is not a chain result.
+    Jobs and models stay unimplemented.
 paths:
   /health:
     get:
@@ -70,9 +71,33 @@ paths:
           description: Not a Milestone 4 read.
   /v1/prices:
     get:
+      summary: Median of fresh public observations
+      parameters:
+        - name: symbol
+          in: query
+          required: true
+          schema:
+            type: string
+          description: SOL/USD, BTC/USD, ETH/USD, or the same assets quoted in USDT.
+        - name: maxAgeMs
+          in: query
+          schema:
+            type: integer
+            minimum: 1000
+            maximum: 300000
+        - name: minimumSources
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
       responses:
-        "501":
-          description: Not a Milestone 4 read.
+        "200":
+          description: Enough fresh observations. authority is none.
+        "400":
+          description: Unknown symbol or invalid query bounds.
+        "422":
+          description: Not enough fresh observations. No median is invented.
   /v1/network:
     get:
       summary: Indexed counts

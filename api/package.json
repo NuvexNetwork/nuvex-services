@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@nuvex/oracle-data": "workspace:*",
     "fastify": "5.12.5",
     "pg": "^8.16.3",
     "zod": "4.6.5"

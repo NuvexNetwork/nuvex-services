@@ -2,9 +2,9 @@
 
 Off-chain services for Nuvex. This repository does not deploy programs and it is not a source of protocol truth.
 
-- `api/` — HTTP read API. `GET /health` returns `authority: none`. Requests, nodes, and network counts come from the indexer store. Jobs, models, and prices return 501.
+- `api/` — HTTP read API. `GET /health` returns `authority: none`. Requests, nodes, and network counts come from the indexer store. `GET /v1/prices` returns a median of fresh public observations and is not a chain result. Jobs and models return 501.
 - `indexer/` — Decodes known account layouts from `getProgramAccounts` and writes PostgreSQL (or a JSON snapshot). It does not invent rows.
-- `data/` — price-provider adapters. Every call is rejected.
+- `data/` — price-provider adapters. A source that is stale, unsigned, or missing a timestamp is dropped. The median is omitted when too few sources remain.
 - `ai/` — a directory and a README. There is no model.
 - `infra/` — local compose file and monitoring config.
 

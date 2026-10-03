@@ -31,6 +31,9 @@ importers:
 
   api:
     dependencies:
+      '@nuvex/oracle-data':
+        specifier: workspace:*
+        version: link:../data
       fastify:
         specifier: 5.12.5
         version: 5.12.5

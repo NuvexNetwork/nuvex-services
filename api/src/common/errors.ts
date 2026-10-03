@@ -1,7 +1,6 @@
 export const notImplemented = {
   error: "NOT_IMPLEMENTED",
-  message:
-    "Jobs, models, and prices are not a Milestone 4 read. Chain state remains authoritative.",
+  message: "Jobs and models are not implemented. Chain state remains authoritative.",
 } as const;
 
 export const readModelUnavailable = {
